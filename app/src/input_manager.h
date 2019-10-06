@@ -14,6 +14,10 @@ struct input_manager {
     struct controller *controller;
     struct video_buffer *video_buffer;
     struct screen *screen;
+
+    bool ctrl_down;
+    bool virtual_finger_down;
+    struct position virtual_finger_position;
 };
 
 void

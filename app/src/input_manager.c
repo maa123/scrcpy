@@ -15,6 +15,9 @@ input_manager_init(struct input_manager *input_manager,
     input_manager->controller = controller;
     input_manager->video_buffer = video_buffer;
     input_manager->screen = screen;
+
+    input_manager->ctrl_down = false;
+    input_manager->virtual_finger_down = false;
 }
 
 // Convert window coordinates (as provided by SDL_GetMouseState() to renderer
@@ -221,6 +224,26 @@ clipboard_paste(struct controller *controller) {
     }
 }
 
+static void
+simulate_virtual_finger(struct input_manager *input_manager, bool down,
+                        struct position position) {
+    SDL_assert(input_manager->virtual_finger_down != down);
+    input_manager->virtual_finger_down = down;
+
+    struct control_msg msg;
+    msg.type = CONTROL_MSG_TYPE_INJECT_TOUCH_EVENT;
+    msg.inject_touch_event.action = down ? AMOTION_EVENT_ACTION_DOWN
+                                         : AMOTION_EVENT_ACTION_UP;
+    msg.inject_touch_event.pointer_id = POINTER_ID_VIRTUAL_FINGER;
+    msg.inject_touch_event.position = position;
+    msg.inject_touch_event.pressure = 1.f;
+    msg.inject_touch_event.buttons = 0;
+
+    if (!controller_push_msg(input_manager->controller, &msg)) {
+        LOGW("Could not request 'inject virtual finger event'");
+    }
+}
+
 void
 input_manager_process_text_input(struct input_manager *input_manager,
                                  const SDL_TextInputEvent *event) {
@@ -253,6 +276,14 @@ input_manager_process_key(struct input_manager *input_manager,
     bool ctrl = event->keysym.mod & (KMOD_LCTRL | KMOD_RCTRL);
     bool alt = event->keysym.mod & (KMOD_LALT | KMOD_RALT);
     bool meta = event->keysym.mod & (KMOD_LGUI | KMOD_RGUI);
+
+    // store the Ctrl state to modify mouse events
+    input_manager->ctrl_down = ctrl;
+
+    if (input_manager->virtual_finger_down && !ctrl) {
+        simulate_virtual_finger(input_manager, false,
+                                input_manager->virtual_finger_position);
+    }
 
     // use Cmd on macOS, Ctrl on other platforms
 #ifdef __APPLE__
@@ -437,6 +468,7 @@ input_manager_process_mouse_button(struct input_manager *input_manager,
         // simulated from touch events, so it's a duplicate
         return;
     }
+
     if (event->type == SDL_MOUSEBUTTONDOWN) {
         if (control && event->button == SDL_BUTTON_RIGHT) {
             press_back_or_turn_screen_on(input_manager->controller);
@@ -447,12 +479,24 @@ input_manager_process_mouse_button(struct input_manager *input_manager,
             return;
         }
         // double-click on black borders resize to fit the device screen
-        if (event->button == SDL_BUTTON_LEFT && event->clicks == 2) {
-            bool outside =
-                is_outside_device_screen(input_manager, event->x, event->y);
-            if (outside) {
-                screen_resize_to_fit(input_manager->screen);
-                return;
+        if (event->button == SDL_BUTTON_LEFT) {
+            if (event->clicks >= 2) {
+                bool outside =
+                    is_outside_device_screen(input_manager, event->x, event->y);
+                if (outside) {
+                    screen_resize_to_fit(input_manager->screen);
+                    return;
+                }
+            }
+
+            if (input_manager->ctrl_down
+                    && !input_manager->virtual_finger_down) {
+                input_manager->virtual_finger_position.point.x = event->x;
+                input_manager->virtual_finger_position.point.y = event->y;
+                input_manager->virtual_finger_position.screen_size =
+                    input_manager->screen->frame_size,
+                simulate_virtual_finger(input_manager, true,
+                    input_manager->virtual_finger_position);
             }
         }
         // otherwise, send the click event to the device

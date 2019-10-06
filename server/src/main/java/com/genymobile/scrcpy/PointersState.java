@@ -74,6 +74,7 @@ public class PointersState {
      */
     public int update(MotionEvent.PointerProperties[] props, MotionEvent.PointerCoords[] coords) {
         int count = pointers.size();
+        Ln.d("POINTERS: " + count);
         for (int i = 0; i < count; ++i) {
             Pointer pointer = pointers.get(i);
 
@@ -84,6 +85,8 @@ public class PointersState {
             coords[i].x = point.getX();
             coords[i].y = point.getY();
             coords[i].pressure = pointer.getPressure();
+
+            Ln.d("  " + i + ": " + pointer.getId() + " (" + point.getX() + "," + point.getY() + ")");
         }
         cleanUp();
         return count;
