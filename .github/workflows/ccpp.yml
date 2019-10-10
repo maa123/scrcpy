@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: apt
+      run: |
+        sudo apt install mingw-w64 mingw-w64-tools
+        sudo apt install openjdk-8-jdk
+    - name: Build
+      run: make -f Makefile.CrossWindows
+    - name: check
+      run: ls dist
