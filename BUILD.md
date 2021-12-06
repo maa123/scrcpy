@@ -13,8 +13,9 @@ First, you need to install the required packages:
 ```bash
 # for Debian/Ubuntu
 sudo apt install ffmpeg libsdl2-2.0-0 adb wget \
-                 gcc git pkg-config meson ninja-build \
-                 libavcodec-dev libavformat-dev libavutil-dev libsdl2-dev
+                 gcc git pkg-config meson ninja-build libsdl2-dev \
+                 libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
+                 libusb-1.0-0 libusb-1.0-0-dev
 ```
 
 Then clone the repo and execute the installation script
@@ -88,11 +89,12 @@ Install the required packages from your package manager.
 
 ```bash
 # runtime dependencies
-sudo apt install ffmpeg libsdl2-2.0-0 adb
+sudo apt install ffmpeg libsdl2-2.0-0 adb libusb-1.0-0
 
 # client build dependencies
-sudo apt install gcc git pkg-config meson ninja-build \
-                 libavcodec-dev libavformat-dev libavutil-dev libsdl2-dev
+sudo apt install gcc git pkg-config meson ninja-build libsdl2-dev \
+                 libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
+                 libusb-1.0-0-dev
 
 # server build dependencies
 sudo apt install openjdk-11-jdk
@@ -114,7 +116,7 @@ pip3 install meson
 sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 
 # client build dependencies
-sudo dnf install SDL2-devel ffms2-devel meson gcc make
+sudo dnf install SDL2-devel ffms2-devel libusb-devel meson gcc make
 
 # server build dependencies
 sudo dnf install java-devel
@@ -268,10 +270,10 @@ install` must be run as root)._
 
 #### Option 2: Use prebuilt server
 
- - [`scrcpy-server-v1.17`][direct-scrcpy-server]  
-   _(SHA-256: 11b5ad2d1bc9b9730fb7254a78efd71a8ff46b1938ff468e47a21b653a1b6725)_
+ - [`scrcpy-server-v1.21`][direct-scrcpy-server]  
+   _(SHA-256: dbcccab523ee26796e55ea33652649e4b7af498edae9aa75e4d4d7869c0ab848)_
 
-[direct-scrcpy-server]: https://github.com/Genymobile/scrcpy/releases/download/v1.17/scrcpy-server-v1.17
+[direct-scrcpy-server]: https://github.com/Genymobile/scrcpy/releases/download/v1.21/scrcpy-server-v1.21
 
 Download the prebuilt server somewhere, and specify its path during the Meson
 configuration:
